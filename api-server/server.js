@@ -28,58 +28,52 @@ app.use((req, res, next) => {
 });
 
 app.get("/", (req, res) => {
-  res.json({
-    message: "Digikala API proxy is running"
-  });
+  res.json({ message: "Digikala API proxy is running" });
 });
 
 app.get("/api/*", async (req, res) => {
   try {
     const apiPath = req.originalUrl.replace(/^\/api/, "");
-    const targetUrl = new URL(
-      apiPath,
-      "https://api.digikala.com"
-    );
+    const targetUrl = new URL(apiPath, "https://api.digikala.com");
 
     targetUrl.searchParams.delete("utm_source");
 
-    const response = await fetch(targetUrl.toString(), {
-      redirect: "manual",
-     headers: {
-  Accept: "application/json",
-  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-  "Referer": "https://www.digikala.com/",
-  "Origin": "https://www.digikala.com",
-  "Accept-Language": "fa-IR,fa;q=0.9,en-US;q=0.8,en;q=0.7"
-},
-      signal: AbortSignal.timeout(15000)
+    console.log("Requesting:", targetUrl.toString());
+
+    const response = await fetch(targetUrl, {
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "Mozilla/5.0",
+      },
+      signal: AbortSignal.timeout(20000),
     });
 
-    console.log("Requested URL:", targetUrl.toString());
-console.log("Response status:", response.status);
-console.log("Redirect location:", response.headers.get("location"));
-console.log(
-  "Response headers:",
-  JSON.stringify(Object.fromEntries(response.headers.entries()))
-);
-console.log("Response body:", await response.clone().text());
-
     const body = await response.text();
+
+    console.log("Upstream status:", response.status);
+    console.log("Final URL:", response.url);
+
+    if (!response.ok) {
+      return res.status(502).json({
+        error: "Digikala upstream request failed",
+        upstreamStatus: response.status,
+        finalUrl: response.url,
+        details: body.slice(0, 500),
+      });
+    }
 
     res.status(response.status);
     res.setHeader(
       "Content-Type",
-      response.headers.get("content-type") ||
-        "application/json"
+      response.headers.get("content-type") || "application/json"
     );
-
     res.send(body);
   } catch (error) {
-    console.error("API request failed:", error);
+    console.error("Proxy error:", error);
 
     res.status(502).json({
-      error: "Digikala API request failed",
-      details: error.cause?.message || error.message
+      error: "Proxy request failed",
+      details: error.message,
     });
   }
 });
