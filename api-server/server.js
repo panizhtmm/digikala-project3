@@ -33,9 +33,11 @@ app.get("/", (req, res) => {
 app.get("/api/*", async (req, res) => {
   try {
     const targetUrl = new URL(
-      req.originalUrl,
-      "https://api.digikala.com"
-    );
+  apiPath,
+  "https://api.digikala.com"
+);
+
+targetUrl.searchParams.delete("utm_source");
 
     const response = await fetch(targetUrl, {
   redirect: "manual",
