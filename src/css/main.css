@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  direction: rtl;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  direction: rtl;
+  font-family: Arial, sans-serif;
+  background-color: white;
+  color: #3f3f46;
+}
+
+button,
+input {
+  font-family: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap');
+
+body {
+  font-family: 'Vazirmatn', sans-serif;
+}
+/* جلوگیری از انتخاب شدن متن و عکس‌ها هنگام کشیدن اسلایدر */
+#vitaminViewport,
+#vitaminViewport *,
+#phoneViewport,
+#phoneViewport *,
+#bookViewport,
+#bookViewport * {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+}
+#vitaminViewport img,
+#phoneViewport img,
+#bookViewport img {
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
