@@ -20,10 +20,7 @@ app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(204);
-  }
-
+  if (req.method === "OPTIONS") return res.sendStatus(204);
   next();
 });
 
@@ -38,24 +35,29 @@ app.get("/api/*", async (req, res) => {
 
     targetUrl.searchParams.delete("utm_source");
 
-    console.log("Requesting:", targetUrl.toString());
-
     const response = await fetch(targetUrl, {
+      redirect: "follow",
       headers: {
-        Accept: "application/json",
-        "User-Agent": "Mozilla/5.0",
+        "Accept": "application/json, text/plain, */*",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "Referer": "https://www.digikala.com/",
+        "X-Web-Client-Id": "web",
+        "X-Web-Client": "desktop",
+        "X-Web-Optimize-Response": "1",
       },
       signal: AbortSignal.timeout(20000),
     });
 
     const body = await response.text();
 
-    console.log("Upstream status:", response.status);
+    console.log("Requested URL:", targetUrl.toString());
     console.log("Final URL:", response.url);
+    console.log("Status:", response.status);
+    console.log("Content-Type:", response.headers.get("content-type"));
 
     if (!response.ok) {
       return res.status(502).json({
-        error: "Digikala upstream request failed",
+        error: "Digikala API request failed",
         upstreamStatus: response.status,
         finalUrl: response.url,
         details: body.slice(0, 500),
