@@ -45,10 +45,13 @@ app.get("/api/*", async (req, res) => {
 
     const response = await fetch(targetUrl.toString(), {
       redirect: "manual",
-      headers: {
-        Accept: "application/json",
-        "User-Agent": "Mozilla/5.0"
-      },
+     headers: {
+  Accept: "application/json",
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+  "Referer": "https://www.digikala.com/",
+  "Origin": "https://www.digikala.com",
+  "Accept-Language": "fa-IR,fa;q=0.9,en-US;q=0.8,en;q=0.7"
+},
       signal: AbortSignal.timeout(15000)
     });
 
