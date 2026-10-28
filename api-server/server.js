@@ -56,11 +56,13 @@ app.get("/api/*", async (req, res) => {
     });
 
     console.log("Requested URL:", targetUrl.toString());
-    console.log("Response status:", response.status);
-    console.log(
-      "Redirect location:",
-      response.headers.get("location")
-    );
+console.log("Response status:", response.status);
+console.log("Redirect location:", response.headers.get("location"));
+console.log(
+  "Response headers:",
+  JSON.stringify(Object.fromEntries(response.headers.entries()))
+);
+console.log("Response body:", await response.clone().text());
 
     const body = await response.text();
 
