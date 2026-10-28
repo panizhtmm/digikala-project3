@@ -38,11 +38,17 @@ app.get("/api/*", async (req, res) => {
     );
 
     const response = await fetch(targetUrl, {
-      headers: {
-        Accept: "application/json",
-      },
-      signal: AbortSignal.timeout(15000),
-    });
+  redirect: "manual",
+  headers: {
+    Accept: "application/json",
+    "User-Agent": "Mozilla/5.0"
+  },
+  signal: AbortSignal.timeout(15000)
+});
+
+console.log("Requested URL:", targetUrl.toString());
+console.log("Response status:", response.status);
+console.log("Redirect location:", response.headers.get("location"));
 
     const body = await response.text();
 
