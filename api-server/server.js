@@ -53,8 +53,9 @@ app.get("/api/*", async (req, res) => {
     );
 
     res.send(body);
- } catch (error) {
+} catch (error) {
   console.error("API request failed:", error);
+
   res.status(502).json({
     error: "Digikala API request failed",
     details: error.cause?.message || error.message
