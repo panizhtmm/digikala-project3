@@ -70,14 +70,19 @@ app.get("/api/*", async (req, res) => {
       response.headers.get("content-type") || "application/json"
     );
     res.send(body);
+ 
   } catch (error) {
     console.error("Proxy error:", error);
+    console.error("Error cause:", error.cause);
 
     res.status(502).json({
       error: "Proxy request failed",
-      details: error.message,
+      message: error.message,
+      cause: error.cause?.message || null,
+      code: error.cause?.code || null
     });
   }
+
 });
 
 app.listen(PORT, "0.0.0.0", () => {
