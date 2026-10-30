@@ -20,7 +20,10 @@ app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === "OPTIONS") return res.sendStatus(204);
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+
   next();
 });
 
@@ -35,12 +38,15 @@ app.get("/api/*", async (req, res) => {
 
     targetUrl.searchParams.delete("utm_source");
 
+    console.log("Requesting:", targetUrl.toString());
+
     const response = await fetch(targetUrl, {
-      redirect: "follow",
+      redirect: "manual",
       headers: {
-        "Accept": "application/json, text/plain, */*",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-        "Referer": "https://www.digikala.com/",
+        Accept: "application/json, text/plain, */*",
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        Referer: "https://www.digikala.com/",
         "X-Web-Client-Id": "web",
         "X-Web-Client": "desktop",
         "X-Web-Optimize-Response": "1",
@@ -49,17 +55,28 @@ app.get("/api/*", async (req, res) => {
     });
 
     const body = await response.text();
+    const location = response.headers.get("location");
+    const contentType = response.headers.get("content-type");
 
-    console.log("Requested URL:", targetUrl.toString());
-    console.log("Final URL:", response.url);
-    console.log("Status:", response.status);
-    console.log("Content-Type:", response.headers.get("content-type"));
+    console.log("Upstream status:", response.status);
+    console.log("Redirect location:", location);
+    console.log("Content type:", contentType);
+
+    if (response.status >= 300 && response.status < 400) {
+      return res.status(502).json({
+        error: "Digikala returned a redirect",
+        upstreamStatus: response.status,
+        redirectLocation: location,
+        contentType,
+        details: body.slice(0, 500),
+      });
+    }
 
     if (!response.ok) {
       return res.status(502).json({
         error: "Digikala API request failed",
         upstreamStatus: response.status,
-        finalUrl: response.url,
+        contentType,
         details: body.slice(0, 500),
       });
     }
@@ -67,10 +84,10 @@ app.get("/api/*", async (req, res) => {
     res.status(response.status);
     res.setHeader(
       "Content-Type",
-      response.headers.get("content-type") || "application/json"
+      contentType || "application/json"
     );
     res.send(body);
- 
+
   } catch (error) {
     console.error("Proxy error:", error);
     console.error("Error cause:", error.cause);
@@ -79,10 +96,9 @@ app.get("/api/*", async (req, res) => {
       error: "Proxy request failed",
       message: error.message,
       cause: error.cause?.message || null,
-      code: error.cause?.code || null
+      code: error.cause?.code || null,
     });
   }
-
 });
 
 app.listen(PORT, "0.0.0.0", () => {
