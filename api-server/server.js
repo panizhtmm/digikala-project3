@@ -63,8 +63,8 @@ app.get(/^\/api\/(.*)/, async (req, res) => {
 
     const body = await response.text();
 
-    console.log("Upstream status:", response.status);
-    console.log("Final URL:", response.url);
+   console.log("Redirect status:", response.status);
+console.log("Redirect location:", response.headers.get("location"));
     console.log(
       "Content-Type:",
       response.headers.get("content-type")
