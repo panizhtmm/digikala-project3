@@ -37,7 +37,7 @@ app.get("/", (req, res) => {
   });
 });
 
-// اتصال مستقیم به API دیجی‌کالا
+// اتصال به API دیجی‌کالا
 app.get(/^\/api\/(.*)/, async (req, res) => {
   try {
     const apiPath = req.originalUrl.replace(/^\/api/, "");
@@ -53,10 +53,10 @@ app.get(/^\/api\/(.*)/, async (req, res) => {
       method: "GET",
       redirect: "follow",
       headers: {
-        "Accept": "application/json, text/plain, */*",
+        Accept: "application/json, text/plain, */*",
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
-        "Referer": "https://www.digikala.com/",
+        Referer: "https://www.digikala.com/",
       },
       signal: AbortSignal.timeout(30000),
     });
@@ -88,14 +88,18 @@ app.get(/^\/api\/(.*)/, async (req, res) => {
 
   } catch (error) {
     console.error("Digikala API error:", error);
+    console.error("Error cause:", error.cause);
 
     return res.status(502).json({
       error: "Could not connect to Digikala API",
       message: error.message,
+      cause: error.cause?.message || null,
+      code: error.cause?.code || null,
     });
   }
 });
 
+// اجرای سرور
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`API server listening on port ${PORT}`);
 });
