@@ -7030,7 +7030,9 @@ async function loadAmazingOffers() {
   `;
 
   try {
-    const response = await fetch("/api/v1/incredible-offers/");
+   const response = await fetch(
+  "https://digikala-project3.onrender.com/api/v1/incredible-offers/"
+);
 
     if (!response.ok) {
       throw new Error(`خطای دریافت API: ${response.status}`);
