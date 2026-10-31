@@ -25,118 +25,22 @@
       type="module"
       src="/src/js/main.js"
     ></script>
-    <!-- ================= اسلایدر اصلی ================= -->
+    
+  <!-- ================= اسلایدر اصلی ================= -->
 <section class="w-full h-100 px-2" dir="rtl">
 
   <div
-  id="mainSlider"
-  class="relative w-full  overflow-hidden rounded-2xl  bg-gray-100 select-none"
-  style="touch-action: pan-y;"
->
+    id="mainSlider"
+    class="relative w-full overflow-hidden rounded-2xl bg-gray-100 select-none"
+    style="touch-action: pan-y;"
+  >
 
-    <!-- اسلایدها -->
+    <!-- اسلایدها از API ساخته می‌شوند -->
     <div
-  id="slides"
-  class="w-full h-full flex transition-transform duration-300 ease-out"
-  style="direction: ltr;"
-
-    >
-
-      <!-- اسلاید اول -->
-      <div class="slide shrink-0 w-full h-full ">
-        <img
-          src="./pictures/pic1.webp"
-          alt="محصولات"
-          draggable="false"
-          class="h-100 w-full object-cover pointer-events-none rounded-b-2xl"
-        >
-        
-      </div>
-       <div class="slide shrink-0 w-full h-full">
-        <img
-          src="./pictures/pic2.webp"
-          alt="محصولات"
-          draggable="false"
-          class="h-100 w-full object-cover pointer-events-none rounded-b-2xl"
-        >
-        
-      </div>
-      <div class="slide shrink-0 w-full h-full">
-        <img
-          src="./pictures/pic3.webp"
-          alt="محصولات"
-          draggable="false"
-          class="h-100 w-full object-cover pointer-events-none rounded-b-2xl"
-        >
-        
-      </div>
-      <div class="slide shrink-0 w-full h-full">
-        <img
-          src="./pictures/pic4.webp"
-          alt="محصولات"
-          draggable="false"
-          class="h-100 w-full object-cover pointer-events-none rounded-b-2xl"
-        >
-        
-      </div>
-      <div class="slide shrink-0 w-full h-full">
-        <img
-          src="./pictures/pic5.webp"
-          alt="محصولات"
-          draggable="false"
-          class="h-100 w-full object-cover pointer-events-none rounded-b-2xl"
-        >
-        
-      </div>
-      <div class="slide shrink-0 w-full h-full">
-        <img
-          src="./pictures/pic6.webp"
-          alt="محصولات"
-          draggable="false"
-          class="h-100 w-full object-cover pointer-events-none rounded-b-2xl"
-        >
-        
-      </div>
-      <div class="slide shrink-0 w-full h-full">
-        <img
-          src="./pictures/pic7.webp"
-          alt="محصولات"
-          draggable="false"
-          class="h-100 w-full object-cover pointer-events-none rounded-b-2xl"
-        >
-        
-      </div>
-      <div class="slide shrink-0 w-full h-full">
-        <img
-          src="./pictures/pic8.webp"
-          alt="محصولات"
-          draggable="false"
-          class="h-100 w-full object-cover pointer-events-none rounded-b-2xl"
-        >
-        
-      </div>
-      <div class="slide shrink-0 w-full h-full">
-        <img
-          src="./pictures/pic9.webp"
-          alt="محصولات"
-          draggable="false"
-          class="h-100 w-full object-cover pointer-events-none rounded-b-2xl"
-        >
-        
-      </div>
-      <div class="slide shrink-0 w-full h-full">
-        <img
-          src="./pictures/pic10.webp"
-          alt="محصولات"
-          draggable="false"
-          class="h-100 w-full object-cover pointer-events-none rounded-b-2xl"
-        >
-        
-      </div>
-
-
-    </div>
-
+      id="slides"
+      class="w-full h-full flex transition-transform duration-300 ease-out"
+      style="direction: ltr;"
+    ></div>
 
     <!-- دکمه قبلی -->
     <button
@@ -146,13 +50,10 @@
              w-12 h-12 rounded-full
              bg-white/90 shadow-md
              flex items-center justify-center
-             text-gray-700
-             hover:bg-white
-             transition"
+             text-gray-700 hover:bg-white transition"
     >
       <i data-lucide="arrow-left" class="w-6 h-6"></i>
     </button>
-
 
     <!-- دکمه بعدی -->
     <button
@@ -162,45 +63,19 @@
              w-12 h-12 rounded-full
              bg-white/90 shadow-md
              flex items-center justify-center
-             text-gray-700
-             hover:bg-white
-             transition"
+             text-gray-700 hover:bg-white transition"
     >
       <i data-lucide="arrow-right" class="w-6 h-6"></i>
     </button>
 
-
-    <!-- نقطه‌های پایین -->
+    <!-- نقطه‌ها از API ساخته می‌شوند -->
     <div
-  id="sliderDots"
-  class="absolute bottom-5 left-1/2 -translate-x-1/2
-         flex items-center gap-2"
->
-  <button
-    class="slider-dot w-2.5 h-2.5 rounded-full bg-white transition-all"
-    data-index="0"
-  ></button>
+      id="sliderDots"
+      class="absolute bottom-5 left-1/2 -translate-x-1/2
+             flex items-center gap-2"
+    ></div>
 
-  <button
-    class="slider-dot w-2.5 h-2.5 rounded-full bg-white/50 transition-all"
-    data-index="1"
-  ></button>
-
-  <button
-    class="slider-dot w-2.5 h-2.5 rounded-full bg-white/50 transition-all"
-    data-index="2"
-  ></button>
-
-  <button
-    class="slider-dot w-2.5 h-2.5 rounded-full bg-white/50 transition-all"
-    data-index="3"
-  ></button>
-
-  <button
-    class="slider-dot w-2.5 h-2.5 rounded-full bg-white/50 transition-all"
-    data-index="4"
-  ></button>
-</div>
+  </div>
 
 </section>
 <!-- ========================================
