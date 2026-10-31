@@ -7392,9 +7392,10 @@ if (vitaminViewport && vitaminTrack) {
     `;
 
     try {
-      const response = await fetch(
-        "/api/v1/search/?q=" + encodeURIComponent("ویتامین")
-      );
+     const response = await fetch(
+  "https://digikala-project3.onrender.com/api/v1/search/?q=" +
+  encodeURIComponent("ویتامین")
+);
 
       if (!response.ok) {
         throw new Error(`خطای API: ${response.status}`);
