@@ -8220,7 +8220,10 @@ if (bestProductsContainer && bestViewport) {
     `;
 
     try {
-      const response = await fetch("/api/v1/search/?q=داغ ترین");
+      const response = await fetch(
+  "https://digikala-project3.onrender.com/api/v1/search/?q=" +
+  encodeURIComponent("پرفروش ترین محصولات")
+);
 
       if (!response.ok) {
         throw new Error(`خطای API: ${response.status}`);
