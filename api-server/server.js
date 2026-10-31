@@ -51,7 +51,7 @@ app.get(/^\/api\/(.*)/, async (req, res) => {
 
     const response = await fetch(targetUrl, {
       method: "GET",
-      redirect: "follow",
+      redirect: "manual",
       headers: {
         Accept: "application/json, text/plain, */*",
         "User-Agent":
