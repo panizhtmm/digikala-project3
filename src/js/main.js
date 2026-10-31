@@ -6717,24 +6717,16 @@ lucide.createIcons();
 // ========================================
 // اسلایدر اصلی
 // ========================================
-
-// ========================================
-// اسلایدر اصلی با API دیجی‌کالا
-// ========================================
-
-// ========================================
-// اسلایدر اصلی دیجی‌کالا با API
-// ========================================
-
-const mainSlider = document.getElementById("mainSlider");
 const slidesContainer = document.getElementById("slides");
-const dotsContainer = document.getElementById("sliderDots");
+const slides = document.querySelectorAll(".slide");
+
+const dots = document.querySelectorAll(".slider-dot");
 
 const prevButton = document.getElementById("prevSlide");
 const nextButton = document.getElementById("nextSlide");
 
-let slides = [];
-let dots = [];
+const mainSlider = document.getElementById("mainSlider");
+
 let currentSlide = 0;
 
 let isDragging = false;
@@ -6743,203 +6735,178 @@ let dragDistance = 0;
 
 
 // ========================================
-// دریافت بنرها از API
-// ========================================
-
-async function loadMainSlider() {
-  try {
-    const response = await fetch(
-      "https://digikala-project3.onrender.com/api/v2/"
-    );
-
-    if (!response.ok) {
-      throw new Error("خطا در دریافت اطلاعات اسلایدر");
-    }
-
-    const result = await response.json();
-
-    const sliderWidget = result.data.widgets.find(
-      (widget) => widget.type === "full_slider"
-    );
-
-    if (!sliderWidget || !Array.isArray(sliderWidget.data)) {
-      throw new Error("بنرهای اسلایدر پیدا نشدند");
-    }
-
-    const banners = sliderWidget.data;
-
-    slidesContainer.innerHTML = "";
-    dotsContainer.innerHTML = "";
-
-    banners.forEach((banner, index) => {
-
-      // ساخت اسلاید
-      const slide = document.createElement("div");
-      slide.className = "slide shrink-0 w-full h-full";
-
-      const link = document.createElement("a");
-
-      link.className = "block w-full h-full";
-
-      if (banner.url?.uri) {
-        link.href = "https://www.digikala.com" + banner.url.uri;
-      } else {
-        link.href = "#";
-      }
-
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-
-      const image = document.createElement("img");
-
-      image.src = banner.webp_image || banner.image;
-      image.alt = banner.title || "بنر دیجی‌کالا";
-      image.draggable = false;
-
-      image.className =
-        "h-100 w-full object-cover pointer-events-none rounded-b-2xl";
-
-      link.appendChild(image);
-      slide.appendChild(link);
-      slidesContainer.appendChild(slide);
-
-      // ساخت نقطه
-      const dot = document.createElement("button");
-
-      dot.type = "button";
-      dot.dataset.index = index;
-
-      dot.className =
-        "slider-dot w-2.5 h-2.5 rounded-full bg-white/50 transition-all";
-
-      dot.setAttribute("aria-label", `اسلاید ${index + 1}`);
-
-      dotsContainer.appendChild(dot);
-    });
-
-    slides = document.querySelectorAll("#slides .slide");
-    dots = document.querySelectorAll("#sliderDots .slider-dot");
-
-    showSlide(0, false);
-
-    if (window.lucide) {
-      window.lucide.createIcons();
-    }
-
-  } catch (error) {
-    console.error("خطا در دریافت اسلایدر:", error);
-  }
-}
-
-
-// ========================================
 // نمایش اسلاید
 // ========================================
 
 function showSlide(index, animate = true) {
 
-  if (!slides.length) return;
-
   if (index >= slides.length) {
     currentSlide = 0;
-  } else if (index < 0) {
+  } 
+  else if (index < 0) {
     currentSlide = slides.length - 1;
-  } else {
+  } 
+  else {
     currentSlide = index;
   }
 
-  slidesContainer.style.transition = animate
-    ? "transform 350ms ease-out"
-    : "none";
+
+  // انیمیشن
+  if (animate) {
+    slidesContainer.style.transition =
+      "transform 350ms ease-out";
+  } else {
+    slidesContainer.style.transition = "none";
+  }
+
 
   slidesContainer.style.transform =
     `translate3d(-${currentSlide * 100}%, 0, 0)`;
 
-  dots.forEach((dot, i) => {
-    dot.classList.toggle("bg-white", i === currentSlide);
-    dot.classList.toggle("bg-white/50", i !== currentSlide);
+
+  // نقطه‌ها
+  dots.forEach((dot, index) => {
+
+    if (index === currentSlide) {
+
+      dot.classList.remove("bg-white/50");
+      dot.classList.add("bg-white");
+
+    } else {
+
+      dot.classList.remove("bg-white");
+      dot.classList.add("bg-white/50");
+
+    }
+
   });
+
 }
 
 
 // ========================================
-// دکمه قبلی و بعدی
+// دکمه قبلی
 // ========================================
 
 prevButton.addEventListener("click", () => {
+
   showSlide(currentSlide - 1);
+
 });
+
+
+// ========================================
+// دکمه بعدی
+// ========================================
 
 nextButton.addEventListener("click", () => {
+
   showSlide(currentSlide + 1);
+
 });
 
 
 // ========================================
-// کلیک روی نقطه‌ها
+// نقطه‌ها
 // ========================================
 
-dotsContainer.addEventListener("click", (event) => {
+dots.forEach((dot) => {
 
-  const dot = event.target.closest(".slider-dot");
+  dot.addEventListener("click", () => {
 
-  if (!dot) return;
+    const index = Number(dot.dataset.index);
 
-  showSlide(Number(dot.dataset.index));
+    showSlide(index);
+
+  });
+
 });
 
 
 // ========================================
-// شروع کشیدن با موس
+// شروع Drag
 // ========================================
 
 mainSlider.addEventListener("mousedown", (event) => {
 
   if (event.button !== 0) return;
-  if (event.target.closest("button")) return;
 
   isDragging = true;
+
   startX = event.clientX;
+
   dragDistance = 0;
 
+  // خاموش کردن انیمیشن هنگام کشیدن
   slidesContainer.style.transition = "none";
 
   mainSlider.classList.remove("cursor-grab");
   mainSlider.classList.add("cursor-grabbing");
 
   event.preventDefault();
+
 });
 
 
 // ========================================
-// حرکت هنگام کشیدن
+// حرکت هنگام Drag
 // ========================================
 
 mainSlider.addEventListener("mousemove", (event) => {
 
   if (!isDragging) return;
 
-  dragDistance = event.clientX - startX;
+  const currentX = event.clientX;
+
+  dragDistance = currentX - startX;
+
 
   const sliderWidth = mainSlider.offsetWidth;
 
-  const basePosition = -(currentSlide * sliderWidth);
 
-  let newPosition = basePosition + dragDistance;
+  // مقدار حرکت اسلاید فعلی
+  const basePosition =
+    -(currentSlide * sliderWidth);
+
+
+  // موقعیت جدید
+  let newPosition =
+    basePosition + dragDistance;
+
+
+  /*
+    جلوگیری از سفید شدن:
+    در اولین اسلاید اجازه نمی‌دهیم
+    بیشتر از محدوده سمت راست کشیده شود.
+  */
 
   if (currentSlide === 0 && dragDistance > 0) {
-    newPosition = basePosition + dragDistance * 0.25;
+
+    newPosition =
+      basePosition + dragDistance * 0.25;
+
   }
+
+
+  /*
+    در آخرین اسلاید هم اجازه نمی‌دهیم
+    از محدوده سمت چپ خارج شود.
+  */
 
   if (
     currentSlide === slides.length - 1 &&
     dragDistance < 0
   ) {
-    newPosition = basePosition + dragDistance * 0.25;
+
+    newPosition =
+      basePosition + dragDistance * 0.25;
+
   }
+
 
   slidesContainer.style.transform =
     `translate3d(${newPosition}px, 0, 0)`;
+
 });
 
 
@@ -6956,32 +6923,61 @@ document.addEventListener("mouseup", () => {
   mainSlider.classList.remove("cursor-grabbing");
   mainSlider.classList.add("cursor-grab");
 
+
   const threshold = 80;
 
+
+  // کشیدن به چپ → بعدی
   if (dragDistance < -threshold) {
+
     showSlide(currentSlide + 1);
-  } else if (dragDistance > threshold) {
-    showSlide(currentSlide - 1);
-  } else {
-    showSlide(currentSlide);
+
   }
 
+  // کشیدن به راست → قبلی
+  else if (dragDistance > threshold) {
+
+    showSlide(currentSlide - 1);
+
+  }
+
+  // اگر کم کشیده شد، برگردد
+  else {
+
+    showSlide(currentSlide);
+
+  }
+
+
   dragDistance = 0;
+
 });
 
 
 // ========================================
-// جلوگیری از انتخاب عکس و متن
+// جلوگیری از Drag خود عکس
 // ========================================
 
-mainSlider.classList.add("select-none", "cursor-grab");
+slides.forEach((slide) => {
+
+  const image = slide.querySelector("img");
+
+  if (image) {
+
+    image.setAttribute("draggable", "false");
+
+  }
+
+});
 
 
 // ========================================
-// اجرای اسلایدر
+// حالت اولیه
 // ========================================
 
-loadMainSlider();
+mainSlider.classList.add("cursor-grab");
+
+showSlide(0, false);
 
  // =========================================
 // اسلایدر شگفت‌انگیزها با API دیجی‌کالا
