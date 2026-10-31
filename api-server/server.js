@@ -5,7 +5,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const ANAKIN_API_KEY = process.env.ANAKIN_API_KEY;
-const ANAKIN_URL = "https://api.anakin.io/v1/url-scraper/scrape";
+const ANAKIN_BASE_URL = "https://api.anakin.io/v1";
 
 const ALLOWED_ORIGINS = [
   "https://panizhtmm.github.io",
@@ -32,10 +32,51 @@ app.use((req, res, next) => {
   next();
 });
 
+// بررسی فعال بودن سرور
 app.get("/", (req, res) => {
-  res.json({ message: "Digikala Anakin proxy is running" });
+  res.json({
+    message: "Digikala Anakin proxy is running",
+  });
 });
 
+// دریافت نتیجه پردازش Anakin با شناسه درخواست
+app.get("/api/job/:id", async (req, res) => {
+  try {
+    if (!ANAKIN_API_KEY) {
+      return res.status(500).json({
+        error: "ANAKIN_API_KEY is not configured",
+      });
+    }
+
+    const jobId = encodeURIComponent(req.params.id);
+
+    const response = await fetch(
+      `${ANAKIN_BASE_URL}/url-scraper/${jobId}`,
+      {
+        method: "GET",
+        headers: {
+          "X-API-Key": ANAKIN_API_KEY,
+          Accept: "application/json",
+        },
+        signal: AbortSignal.timeout(30000),
+      }
+    );
+
+    const data = await response.json();
+
+    return res.status(response.status).json(data);
+
+  } catch (error) {
+    console.error("Anakin polling error:", error);
+
+    return res.status(502).json({
+      error: "Could not retrieve Anakin job",
+      message: error.message,
+    });
+  }
+});
+
+// ارسال درخواست جست‌وجو به Anakin
 app.get("/api/*", async (req, res) => {
   try {
     if (!ANAKIN_API_KEY) {
@@ -45,31 +86,35 @@ app.get("/api/*", async (req, res) => {
     }
 
     const apiPath = req.originalUrl.replace(/^\/api/, "");
-    const targetUrl = new URL(apiPath, "https://www.digikala.com");
 
-    const response = await fetch(ANAKIN_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-API-Key": ANAKIN_API_KEY,
-      },
-      body: JSON.stringify({
-        url: targetUrl.toString(),
-      }),
-      signal: AbortSignal.timeout(60000),
-    });
+    const targetUrl = new URL(
+      apiPath,
+      "https://www.digikala.com"
+    );
+
+    targetUrl.searchParams.delete("utm_source");
+
+    console.log("Sending to Anakin:", targetUrl.toString());
+
+    const response = await fetch(
+      `${ANAKIN_BASE_URL}/url-scraper/scrape`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-Key": ANAKIN_API_KEY,
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          url: targetUrl.toString(),
+        }),
+        signal: AbortSignal.timeout(100000),
+      }
+    );
 
     const body = await response.text();
 
     console.log("Anakin status:", response.status);
-
-    if (!response.ok) {
-      return res.status(502).json({
-        error: "Anakin request failed",
-        status: response.status,
-        details: body.slice(0, 1000),
-      });
-    }
 
     let data;
 
@@ -79,13 +124,13 @@ app.get("/api/*", async (req, res) => {
       data = { result: body };
     }
 
-    return res.json(data);
+    return res.status(response.status).json(data);
 
   } catch (error) {
     console.error("Anakin proxy error:", error);
 
     return res.status(502).json({
-      error: "Proxy request failed",
+      error: "Anakin request failed",
       message: error.message,
     });
   }
