@@ -32,64 +32,81 @@ app.use((req, res, next) => {
 
 // بررسی فعال بودن سرور
 app.get("/", (req, res) => {
-  res.json({
-    message: "Digikala API proxy is running",
-  });
+  res.json({ message: "Digikala API proxy is running" });
 });
 
-// اتصال به API دیجی‌کالا
+// دریافت اطلاعات از API دیجی‌کالا
 app.get(/^\/api\/(.*)/, async (req, res) => {
   try {
     const apiPath = req.originalUrl.replace(/^\/api/, "");
+    const targetUrl = new URL(apiPath, "https://api.digikala.com");
 
-    const targetUrl = new URL(
-      apiPath,
-      "https://api.digikala.com"
-    );
-
-    // حذف پارامتر ردیابی
     targetUrl.searchParams.delete("utm_source");
+
+    const headers = {
+      Accept: "application/json, text/plain, */*",
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+      Referer: "https://www.digikala.com/",
+    };
 
     console.log("Requested URL:", targetUrl.toString());
 
-    const response = await fetch(targetUrl, {
+    // درخواست اول
+    let response = await fetch(targetUrl, {
       method: "GET",
       redirect: "manual",
-      headers: {
-        Accept: "application/json, text/plain, */*",
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
-        Referer: "https://www.digikala.com/",
-      },
+      headers,
       signal: AbortSignal.timeout(30000),
     });
 
-    console.log("Upstream status:", response.status);
-    console.log(
-      "Redirect location:",
-      response.headers.get("location")
-    );
+    console.log("First response:", response.status);
 
-    // اگر پاسخ ریدایرکت بود، اطلاعات کامل هدرها را برگردان
+    // اگر ریدایرکت بود، کوکی را دریافت می‌کنیم
     if (response.status >= 300 && response.status < 400) {
-      return res.status(200).json({
+      const cookieHeaders = response.headers.getSetCookie
+        ? response.headers.getSetCookie()
+        : [response.headers.get("set-cookie")].filter(Boolean);
+
+      const cookies = cookieHeaders
+        .map((cookie) => cookie.split(";")[0])
+        .filter(Boolean);
+
+      const redirectLocation = response.headers.get("location");
+
+      if (cookies.length > 0) {
+        headers.Cookie = cookies.join("; ");
+      }
+
+      // درخواست دوم با کوکی دریافتی
+      response = await fetch(
+        redirectLocation
+          ? new URL(redirectLocation, targetUrl)
+          : targetUrl,
+        {
+          method: "GET",
+          redirect: "manual",
+          headers,
+          signal: AbortSignal.timeout(30000),
+        }
+      );
+    }
+
+    console.log("Final upstream status:", response.status);
+    console.log("Final URL:", response.url);
+
+    // اگر هنوز ریدایرکت وجود داشت
+    if (response.status >= 300 && response.status < 400) {
+      return res.status(502).json({
+        error: "Digikala redirected again",
         redirectStatus: response.status,
         redirectLocation: response.headers.get("location"),
-        requestedUrl: targetUrl.toString(),
-        responseHeaders: Object.fromEntries(
-          response.headers.entries()
-        ),
+        responseHeaders: Object.fromEntries(response.headers.entries()),
       });
     }
 
     const body = await response.text();
 
-    console.log(
-      "Content-Type:",
-      response.headers.get("content-type")
-    );
-
-    // بررسی JSON بودن پاسخ
     let data;
 
     try {
@@ -99,7 +116,6 @@ app.get(/^\/api\/(.*)/, async (req, res) => {
         error: "Digikala did not return valid JSON",
         upstreamStatus: response.status,
         contentType: response.headers.get("content-type"),
-        finalUrl: response.url,
         preview: body.slice(0, 500),
       });
     }
