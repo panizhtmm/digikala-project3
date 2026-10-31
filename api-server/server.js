@@ -4,10 +4,15 @@ import express from "express";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const ANAKIN_API_KEY = process.env.ANAKIN_API_KEY;
+const ANAKIN_URL = "https://api.anakin.io/v1/url-scraper/scrape";
+
 const ALLOWED_ORIGINS = [
   "https://panizhtmm.github.io",
   "http://localhost:5173",
 ];
+
+app.use(express.json());
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
@@ -28,75 +33,60 @@ app.use((req, res, next) => {
 });
 
 app.get("/", (req, res) => {
-  res.json({ message: "Digikala API proxy is running" });
+  res.json({ message: "Digikala Anakin proxy is running" });
 });
 
 app.get("/api/*", async (req, res) => {
   try {
+    if (!ANAKIN_API_KEY) {
+      return res.status(500).json({
+        error: "ANAKIN_API_KEY is not configured",
+      });
+    }
+
     const apiPath = req.originalUrl.replace(/^\/api/, "");
-    const targetUrl = new URL(apiPath, "https://api.digikala.com");
+    const targetUrl = new URL(apiPath, "https://www.digikala.com");
 
-    targetUrl.searchParams.delete("utm_source");
-
-    console.log("Requesting:", targetUrl.toString());
-
-    const response = await fetch(targetUrl, {
-      redirect: "manual",
+    const response = await fetch(ANAKIN_URL, {
+      method: "POST",
       headers: {
-        Accept: "application/json, text/plain, */*",
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-        Referer: "https://www.digikala.com/",
-        "X-Web-Client-Id": "web",
-        "X-Web-Client": "desktop",
-        "X-Web-Optimize-Response": "1",
+        "Content-Type": "application/json",
+        "X-API-Key": ANAKIN_API_KEY,
       },
-      signal: AbortSignal.timeout(20000),
+      body: JSON.stringify({
+        url: targetUrl.toString(),
+      }),
+      signal: AbortSignal.timeout(60000),
     });
 
     const body = await response.text();
-    const location = response.headers.get("location");
-    const contentType = response.headers.get("content-type");
 
-    console.log("Upstream status:", response.status);
-    console.log("Redirect location:", location);
-    console.log("Content type:", contentType);
-
-    if (response.status >= 300 && response.status < 400) {
-      return res.status(502).json({
-        error: "Digikala returned a redirect",
-        upstreamStatus: response.status,
-        redirectLocation: location,
-        contentType,
-        details: body.slice(0, 500),
-      });
-    }
+    console.log("Anakin status:", response.status);
 
     if (!response.ok) {
       return res.status(502).json({
-        error: "Digikala API request failed",
-        upstreamStatus: response.status,
-        contentType,
-        details: body.slice(0, 500),
+        error: "Anakin request failed",
+        status: response.status,
+        details: body.slice(0, 1000),
       });
     }
 
-    res.status(response.status);
-    res.setHeader(
-      "Content-Type",
-      contentType || "application/json"
-    );
-    res.send(body);
+    let data;
+
+    try {
+      data = JSON.parse(body);
+    } catch {
+      data = { result: body };
+    }
+
+    return res.json(data);
 
   } catch (error) {
-    console.error("Proxy error:", error);
-    console.error("Error cause:", error.cause);
+    console.error("Anakin proxy error:", error);
 
-    res.status(502).json({
+    return res.status(502).json({
       error: "Proxy request failed",
       message: error.message,
-      cause: error.cause?.message || null,
-      code: error.cause?.code || null,
     });
   }
 });
