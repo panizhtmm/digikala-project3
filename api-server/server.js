@@ -47,7 +47,7 @@ app.get(/^\/api\/(.*)/, async (req, res) => {
       "https://api.digikala.com"
     );
 
-    console.log("Digikala API request:", targetUrl.toString());
+    console.log("Requested URL:", targetUrl.toString());
 
     const response = await fetch(targetUrl, {
       method: "GET",
@@ -61,15 +61,29 @@ app.get(/^\/api\/(.*)/, async (req, res) => {
       signal: AbortSignal.timeout(30000),
     });
 
+    console.log("Upstream status:", response.status);
+    console.log(
+      "Redirect location:",
+      response.headers.get("location")
+    );
+
+    // نمایش مقصد ریدایرکت
+    if (response.status >= 300 && response.status < 400) {
+      return res.status(200).json({
+        redirectStatus: response.status,
+        redirectLocation: response.headers.get("location"),
+        requestedUrl: targetUrl.toString(),
+      });
+    }
+
     const body = await response.text();
 
-   console.log("Redirect status:", response.status);
-console.log("Redirect location:", response.headers.get("location"));
     console.log(
       "Content-Type:",
       response.headers.get("content-type")
     );
 
+    // بررسی JSON بودن پاسخ
     let data;
 
     try {
