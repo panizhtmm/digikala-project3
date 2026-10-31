@@ -8222,7 +8222,7 @@ if (bestProductsContainer && bestViewport) {
     try {
       const response = await fetch(
   "https://digikala-project3.onrender.com/api/v1/search/?q=" +
-  encodeURIComponent("پرفروش ترین محصولات")
+  encodeURIComponent("داغ ترین محصولات")
 );
 
       if (!response.ok) {
