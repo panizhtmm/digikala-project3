@@ -8305,7 +8305,9 @@ if (bestProductsContainer && bestViewport) {
 // بررسی ساختار محصولات شگفت‌انگیز
 async function testAmazingOffersAPI() {
   try {
-    const response = await fetch("/api/v1/incredible-offers/");
+   const response = await fetch(
+  "https://digikala-project3.onrender.com/api/v1/incredible-offers/"
+);
     const result = await response.json();
 
     const products = result.data.deal_of_the_day_products.products;
