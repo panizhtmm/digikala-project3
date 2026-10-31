@@ -47,6 +47,9 @@ app.get(/^\/api\/(.*)/, async (req, res) => {
       "https://api.digikala.com"
     );
 
+    // حذف پارامتر ردیابی
+    targetUrl.searchParams.delete("utm_source");
+
     console.log("Requested URL:", targetUrl.toString());
 
     const response = await fetch(targetUrl, {
@@ -67,7 +70,7 @@ app.get(/^\/api\/(.*)/, async (req, res) => {
       response.headers.get("location")
     );
 
-    // نمایش مقصد ریدایرکت
+    // بررسی ریدایرکت
     if (response.status >= 300 && response.status < 400) {
       return res.status(200).json({
         redirectStatus: response.status,
