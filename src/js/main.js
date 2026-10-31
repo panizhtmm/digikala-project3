@@ -6722,6 +6722,10 @@ lucide.createIcons();
 // اسلایدر اصلی با API دیجی‌کالا
 // ========================================
 
+// ========================================
+// اسلایدر اصلی دیجی‌کالا با API
+// ========================================
+
 const mainSlider = document.getElementById("mainSlider");
 const slidesContainer = document.getElementById("slides");
 const dotsContainer = document.getElementById("sliderDots");
@@ -6758,8 +6762,8 @@ async function loadMainSlider() {
       (widget) => widget.type === "full_slider"
     );
 
-    if (!sliderWidget || !sliderWidget.data.length) {
-      throw new Error("بنری برای نمایش پیدا نشد");
+    if (!sliderWidget || !Array.isArray(sliderWidget.data)) {
+      throw new Error("بنرهای اسلایدر پیدا نشدند");
     }
 
     const banners = sliderWidget.data;
@@ -6771,15 +6775,17 @@ async function loadMainSlider() {
 
       // ساخت اسلاید
       const slide = document.createElement("div");
-
       slide.className = "slide shrink-0 w-full h-full";
 
       const link = document.createElement("a");
 
       link.className = "block w-full h-full";
-      link.href = banner.url?.uri
-        ? "https://www.digikala.com" + banner.url.uri
-        : "#";
+
+      if (banner.url?.uri) {
+        link.href = "https://www.digikala.com" + banner.url.uri;
+      } else {
+        link.href = "#";
+      }
 
       link.target = "_blank";
       link.rel = "noopener noreferrer";
@@ -6802,8 +6808,9 @@ async function loadMainSlider() {
 
       dot.type = "button";
       dot.dataset.index = index;
+
       dot.className =
-        "slider-dot w-2 h-2 rounded-full bg-white/50 transition-all";
+        "slider-dot w-2.5 h-2.5 rounded-full bg-white/50 transition-all";
 
       dot.setAttribute("aria-label", `اسلاید ${index + 1}`);
 
@@ -6815,8 +6822,12 @@ async function loadMainSlider() {
 
     showSlide(0, false);
 
+    if (window.lucide) {
+      window.lucide.createIcons();
+    }
+
   } catch (error) {
-    console.error("خطا در اسلایدر:", error);
+    console.error("خطا در دریافت اسلایدر:", error);
   }
 }
 
@@ -6911,6 +6922,7 @@ mainSlider.addEventListener("mousemove", (event) => {
   dragDistance = event.clientX - startX;
 
   const sliderWidth = mainSlider.offsetWidth;
+
   const basePosition = -(currentSlide * sliderWidth);
 
   let newPosition = basePosition + dragDistance;
@@ -6944,15 +6956,6 @@ document.addEventListener("mouseup", () => {
   mainSlider.classList.remove("cursor-grabbing");
   mainSlider.classList.add("cursor-grab");
 
-  // جلوگیری از باز شدن لینک بعد از کشیدن اسلاید
-  if (Math.abs(dragDistance) > 5) {
-    mainSlider.dataset.dragged = "true";
-
-    setTimeout(() => {
-      delete mainSlider.dataset.dragged;
-    }, 100);
-  }
-
   const threshold = 80;
 
   if (dragDistance < -threshold) {
@@ -6968,24 +6971,10 @@ document.addEventListener("mouseup", () => {
 
 
 // ========================================
-// جلوگیری از انتخاب متن و عکس
+// جلوگیری از انتخاب عکس و متن
 // ========================================
 
 mainSlider.classList.add("select-none", "cursor-grab");
-
-
-// ========================================
-// جلوگیری از باز شدن لینک هنگام Drag
-// ========================================
-
-slidesContainer.addEventListener("click", (event) => {
-
-  if (mainSlider.dataset.dragged === "true") {
-    event.preventDefault();
-    event.stopPropagation();
-  }
-
-}, true);
 
 
 // ========================================
