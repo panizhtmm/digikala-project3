@@ -4,9 +4,6 @@ import express from "express";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const ANAKIN_API_KEY = process.env.ANAKIN_API_KEY;
-const ANAKIN_BASE_URL = "https://api.anakin.io/v1";
-
 const ALLOWED_ORIGINS = [
   "https://panizhtmm.github.io",
   "http://localhost:5173",
@@ -14,6 +11,7 @@ const ALLOWED_ORIGINS = [
 
 app.use(express.json());
 
+// تنظیمات CORS
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
@@ -35,102 +33,64 @@ app.use((req, res, next) => {
 // بررسی فعال بودن سرور
 app.get("/", (req, res) => {
   res.json({
-    message: "Digikala Anakin proxy is running",
+    message: "Digikala API proxy is running",
   });
 });
 
-// دریافت نتیجه پردازش Anakin با شناسه درخواست
-app.get("/api/job/:id", async (req, res) => {
+// اتصال مستقیم به API دیجی‌کالا
+app.get(/^\/api\/(.*)/, async (req, res) => {
   try {
-    if (!ANAKIN_API_KEY) {
-      return res.status(500).json({
-        error: "ANAKIN_API_KEY is not configured",
-      });
-    }
-
-    const jobId = encodeURIComponent(req.params.id);
-
-    const response = await fetch(
-      `${ANAKIN_BASE_URL}/url-scraper/${jobId}`,
-      {
-        method: "GET",
-        headers: {
-          "X-API-Key": ANAKIN_API_KEY,
-          Accept: "application/json",
-        },
-        signal: AbortSignal.timeout(30000),
-      }
-    );
-
-    const data = await response.json();
-
-    return res.status(response.status).json(data);
-
-  } catch (error) {
-    console.error("Anakin polling error:", error);
-
-    return res.status(502).json({
-      error: "Could not retrieve Anakin job",
-      message: error.message,
-    });
-  }
-});
-
-// ارسال درخواست جست‌وجو به Anakin
-app.get("/api/*", async (req, res) => {
-  try {
-    if (!ANAKIN_API_KEY) {
-      return res.status(500).json({
-        error: "ANAKIN_API_KEY is not configured",
-      });
-    }
-
     const apiPath = req.originalUrl.replace(/^\/api/, "");
 
     const targetUrl = new URL(
       apiPath,
-      "https://www.digikala.com"
+      "https://api.digikala.com"
     );
 
-    targetUrl.searchParams.delete("utm_source");
+    console.log("Digikala API request:", targetUrl.toString());
 
-    console.log("Sending to Anakin:", targetUrl.toString());
-
-    const response = await fetch(
-      `${ANAKIN_BASE_URL}/url-scraper/scrape`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-Key": ANAKIN_API_KEY,
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          url: targetUrl.toString(),
-        }),
-        signal: AbortSignal.timeout(100000),
-      }
-    );
+    const response = await fetch(targetUrl, {
+      method: "GET",
+      redirect: "follow",
+      headers: {
+        "Accept": "application/json, text/plain, */*",
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+        "Referer": "https://www.digikala.com/",
+      },
+      signal: AbortSignal.timeout(30000),
+    });
 
     const body = await response.text();
 
-    console.log("Anakin status:", response.status);
+    console.log("Upstream status:", response.status);
+    console.log("Final URL:", response.url);
+    console.log(
+      "Content-Type:",
+      response.headers.get("content-type")
+    );
 
     let data;
 
     try {
       data = JSON.parse(body);
     } catch {
-      data = { result: body };
+      return res.status(502).json({
+        error: "Digikala did not return valid JSON",
+        upstreamStatus: response.status,
+        contentType: response.headers.get("content-type"),
+        finalUrl: response.url,
+        preview: body.slice(0, 500),
+      });
     }
 
     return res.status(response.status).json(data);
 
   } catch (error) {
-    console.error("Anakin proxy error:", error);
+    console.error("Digikala API error:", error);
 
     return res.status(502).json({
-      error: "Anakin request failed",
+      error: "Could not connect to Digikala API",
       message: error.message,
     });
   }
