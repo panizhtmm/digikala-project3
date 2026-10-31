@@ -70,12 +70,15 @@ app.get(/^\/api\/(.*)/, async (req, res) => {
       response.headers.get("location")
     );
 
-    // بررسی ریدایرکت
+    // اگر پاسخ ریدایرکت بود، اطلاعات کامل هدرها را برگردان
     if (response.status >= 300 && response.status < 400) {
       return res.status(200).json({
         redirectStatus: response.status,
         redirectLocation: response.headers.get("location"),
         requestedUrl: targetUrl.toString(),
+        responseHeaders: Object.fromEntries(
+          response.headers.entries()
+        ),
       });
     }
 
