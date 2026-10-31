@@ -7714,9 +7714,10 @@ if (bookViewport && bookTrack) {
     `;
 
     try {
-      const response = await fetch(
-        "/api/v1/search/?q=کتاب"
-      );
+     const response = await fetch(
+  "https://digikala-project3.onrender.com/api/v1/search/?q=" +
+  encodeURIComponent("رمان و ادبیات داستانی")
+);
 
       if (!response.ok) {
         throw new Error(`خطای API: ${response.status}`);
