@@ -7601,6 +7601,8 @@ if (caseViewport && caseTrack) {
       }
 
       const data = await response.json();
+      console.log("پاسخ API کاور گوشی:", data);
+console.log("تعداد محصولات کاور گوشی:", data.data?.products?.length);
       const products = data.data?.products || [];
 
       if (products.length === 0) {
