@@ -11,6 +11,30 @@ const ALLOWED_ORIGINS = [
 
 app.use(express.json());
 
+// محدودیت دو درخواست هم‌زمان
+const MAX_CONCURRENT_REQUESTS = 2;
+let activeRequests = 0;
+const waitingRequests = [];
+
+async function acquireRequestSlot() {
+  if (activeRequests < MAX_CONCURRENT_REQUESTS) {
+    activeRequests++;
+  } else {
+    await new Promise((resolve) => {
+      waitingRequests.push(resolve);
+    });
+  }
+
+  return function releaseRequestSlot() {
+    if (waitingRequests.length > 0) {
+      const nextRequest = waitingRequests.shift();
+      nextRequest();
+    } else {
+      activeRequests--;
+    }
+  };
+}
+
 // تنظیمات CORS
 app.use((req, res, next) => {
   const origin = req.headers.origin;
@@ -37,6 +61,11 @@ app.get("/", (req, res) => {
 
 // دریافت اطلاعات از API دیجی‌کالا
 app.get(/^\/api\/(.*)/, async (req, res) => {
+  const releaseRequestSlot = await acquireRequestSlot();
+
+  console.log("Active requests:", activeRequests);
+  console.log("Waiting requests:", waitingRequests.length);
+
   try {
     const apiPath = req.originalUrl.replace(/^\/api/, "");
     const targetUrl = new URL(apiPath, "https://api.digikala.com");
@@ -52,7 +81,6 @@ app.get(/^\/api\/(.*)/, async (req, res) => {
 
     console.log("Requested URL:", targetUrl.toString());
 
-    // درخواست اول
     let response = await fetch(targetUrl, {
       method: "GET",
       redirect: "manual",
@@ -62,7 +90,6 @@ app.get(/^\/api\/(.*)/, async (req, res) => {
 
     console.log("First response:", response.status);
 
-    // اگر ریدایرکت بود، کوکی را دریافت می‌کنیم
     if (response.status >= 300 && response.status < 400) {
       const cookieHeaders = response.headers.getSetCookie
         ? response.headers.getSetCookie()
@@ -78,7 +105,6 @@ app.get(/^\/api\/(.*)/, async (req, res) => {
         headers.Cookie = cookies.join("; ");
       }
 
-      // درخواست دوم با کوکی دریافتی
       response = await fetch(
         redirectLocation
           ? new URL(redirectLocation, targetUrl)
@@ -95,13 +121,11 @@ app.get(/^\/api\/(.*)/, async (req, res) => {
     console.log("Final upstream status:", response.status);
     console.log("Final URL:", response.url);
 
-    // اگر هنوز ریدایرکت وجود داشت
     if (response.status >= 300 && response.status < 400) {
       return res.status(502).json({
         error: "Digikala redirected again",
         redirectStatus: response.status,
         redirectLocation: response.headers.get("location"),
-        responseHeaders: Object.fromEntries(response.headers.entries()),
       });
     }
 
@@ -132,6 +156,10 @@ app.get(/^\/api\/(.*)/, async (req, res) => {
       cause: error.cause?.message || null,
       code: error.cause?.code || null,
     });
+
+  } finally {
+    releaseRequestSlot();
+    console.log("Request finished. Active requests:", activeRequests);
   }
 });
 
