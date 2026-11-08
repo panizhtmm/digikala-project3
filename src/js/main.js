@@ -91,7 +91,7 @@ document.querySelector("#app").innerHTML = `
     <!-- ========================= -->
 
     <div
-      class="h-[52px] border-t border-gray-100 px-6 flex items-center"
+      class="h-[52px] w-full border-t border-gray-100 px-6 flex items-center"
     >
 
       <!-- منوی دسته بندی -->
