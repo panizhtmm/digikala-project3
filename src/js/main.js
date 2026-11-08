@@ -91,7 +91,7 @@ document.querySelector("#app").innerHTML = `
     <!-- ========================= -->
 
     <div
-      class="h-[52px] w-full border-t border-gray-100 px-6 flex items-center"
+     class="relative h-[52px] w-full border-t border-gray-100 px-6 flex items-center"
     >
 
       <!-- منوی دسته بندی -->
@@ -6671,12 +6671,11 @@ document.querySelector("#app").innerHTML = `
 
       <!-- ارسال به آدرس -->
       <div
-  class="mr-auto flex items-center gap-2
-         text-sm text-gray-600
-         whitespace-nowrap
-         cursor-pointer
-         
-         "
+ class="absolute left-6 top-1/2 -translate-y-1/2
+       flex items-center gap-2
+       text-sm text-gray-600
+       whitespace-nowrap
+       cursor-pointer"
 >
 
   <i
