@@ -7594,7 +7594,7 @@ if (caseViewport && caseTrack) {
     try {
      const response = await fetch(
   "https://digikala-project3.onrender.com/api/v1/search/?q=" +
-  encodeURIComponent("کیف و کاور گوشی")
+  encodeURIComponent("قاب و کاور گوشی")
 );
       if (!response.ok) {
         throw new Error(`خطای API: ${response.status}`);
