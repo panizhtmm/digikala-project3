@@ -8000,7 +8000,7 @@ if (hotProductsContainer && hotViewport) {
     try {
      const response = await fetch(
   "https://digikala-project3.onrender.com/api/v1/search/?q=" +
-  encodeURIComponent("پرفروش ترین محصولات")
+  encodeURIComponent("محبوب ترین محصولات")
 );
 
       if (!response.ok) {
