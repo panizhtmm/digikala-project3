@@ -6671,7 +6671,7 @@ document.querySelector("#app").innerHTML = `
 
       <!-- ارسال به آدرس -->
       <div
-  class="mr-97 flex items-center gap-2
+  class="left-0 flex items-center gap-2
          text-sm text-gray-600
          whitespace-nowrap
          cursor-pointer
