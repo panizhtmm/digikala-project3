@@ -8216,7 +8216,7 @@ if (bestProductsContainer && bestViewport) {
 async function loadBestProducts() {
   bestProductsContainer.innerHTML = `
     <p class="py-8 text-center text-gray-500">
-      در حال دریافت محصولات متنوع...
+      در حال دریافت محصولات ...
     </p>
   `;
 
