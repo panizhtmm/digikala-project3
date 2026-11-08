@@ -7203,7 +7203,7 @@ function setupAmazingOffersSlider() {
       : "none";
 
     dealTrack.style.transform =
-      `translate3d(${-currentTranslate}px, 0, 0)`;
+      `translate3d(${currentTranslate}px, 0, 0)`;
   }
 
   // دکمه راست
