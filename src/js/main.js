@@ -7209,14 +7209,14 @@ function setupAmazingOffersSlider() {
   // دکمه راست
   if (dealPrev) {
     dealPrev.addEventListener("click", () => {
-      setPosition(currentTranslate + 200);
+      setPosition(currentTranslate - 200);
     });
   }
 
   // دکمه چپ
   if (dealNext) {
     dealNext.addEventListener("click", () => {
-      setPosition(currentTranslate - 200);
+      setPosition(currentTranslate + 200);
     });
   }
 
