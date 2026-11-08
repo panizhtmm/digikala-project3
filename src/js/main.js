@@ -12,7 +12,7 @@ document.querySelector("#app").innerHTML = `
       <!-- لوگو -->
 <div class="shrink-0">
   <img
-    src="/digikala-logo.svg"
+    src="/digikala-project3/digikala-logo.svg"
     alt="دیجی‌کالا"
     class="w-[200px] h-auto"
   />
