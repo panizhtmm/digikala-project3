@@ -8212,90 +8212,171 @@ if (bestProductsContainer && bestViewport) {
   bestViewport.classList.add("cursor-grab");
 
   // دریافت محصولات از API
-  async function loadBestProducts() {
-    bestProductsContainer.innerHTML = `
-      <p class="py-8 text-center text-gray-500">
-        در حال دریافت محصولات...
-      </p>
-    `;
+  
+async function loadBestProducts() {
+  bestProductsContainer.innerHTML = `
+    <p class="py-8 text-center text-gray-500">
+      در حال دریافت محصولات متنوع...
+    </p>
+  `;
 
-    try {
-      const response = await fetch(
-  "https://digikala-project3.onrender.com/api/v1/search/?q=" +
-  encodeURIComponent("تمام محصولات") +
-  "&sort=1"
-);
+  try {
+    // جست‌وجو در دسته‌های مختلف دیجی‌کالا
+    const categories = [
+      "موبایل",
+      "لوازم خانه و آشپزخانه",
+      "آرایشی و بهداشتی",
+      "کتاب",
+      "کفش و پوشاک",
+      "مواد غذایی و سوپرمارکتی",
+      "هدفون و ساعت هوشمند"
+    ];
 
-      if (!response.ok) {
-        throw new Error(`خطای API: ${response.status}`);
-      }
+    // دریافت محصولات هر دسته از API
+    const categoryResults = await Promise.all(
+      categories.map(async (category) => {
+        try {
+          const url =
+            "https://digikala-project3.onrender.com/api/v1/search/?q=" +
+            encodeURIComponent(category) +
+            "&sort=1";
 
-      const data = await response.json();
-      const products = data.data?.products || [];
+          const response = await fetch(url);
 
-      if (products.length === 0) {
-        throw new Error("محصولی پیدا نشد.");
-      }
+          if (!response.ok) {
+            throw new Error(`خطای API برای ${category}`);
+          }
 
-      bestProductsContainer.innerHTML = "";
+          const data = await response.json();
 
-      products.slice(0, 15).forEach((product, index) => {
+          return data.data?.products || [];
+        } catch (error) {
+          console.error(
+            `خطا در دریافت دسته ${category}:`,
+            error
+          );
+
+          return [];
+        }
+      })
+    );
+
+    // حذف محصولات تکراری و ترکیب نوبتی دسته‌ها
+    const selectedProducts = [];
+    const seenIds = new Set();
+    const seenTitles = new Set();
+
+    for (let round = 0; round < 5; round++) {
+      for (const products of categoryResults) {
+        const product = products[round];
+
+        if (!product) continue;
+
         const title =
           product.title_fa ||
           product.title ||
           "محصول دیجی‌کالا";
 
-        const imageUrl =
-          product.images?.main?.url?.[0] ||
-          product.image ||
+        const normalizedTitle = title
+          .trim()
+          .replace(/\s+/g, " ");
+
+        const productId =
+          product.id ||
+          product.product_id ||
+          product.slug ||
           "";
 
-        const card = document.createElement("article");
+        if (
+          (productId && seenIds.has(String(productId))) ||
+          seenTitles.has(normalizedTitle)
+        ) {
+          continue;
+        }
 
-        card.className =
-          "flex min-w-0 items-center gap-3 border-b border-gray-100 p-3";
+        if (productId) {
+          seenIds.add(String(productId));
+        }
 
-        const number = document.createElement("span");
-        number.className =
-          "shrink-0 text-2xl font-bold text-sky-500";
-        number.textContent = String(index + 1);
+        seenTitles.add(normalizedTitle);
+        selectedProducts.push(product);
 
-        const image = document.createElement("img");
-        image.className = "h-20 w-20 shrink-0 object-contain";
-        image.src = Array.isArray(imageUrl) ? imageUrl[0] : imageUrl;
-        image.alt = title;
-        image.draggable = false;
-        image.loading = "lazy";
-        image.style.pointerEvents = "none";
+        if (selectedProducts.length === 15) {
+          break;
+        }
+      }
 
-        const name = document.createElement("p");
-        name.className =
-          "line-clamp-2 text-sm leading-6 text-gray-700";
-        name.textContent = title;
-
-        card.append(number, image, name);
-        bestProductsContainer.appendChild(card);
-      });
-
-      // چیدمان سه ردیف مانند اسلایدر داغ‌ترین‌ها
-      bestProductsContainer.className =
-        "grid grid-flow-col grid-rows-3 auto-cols-[calc((100%-2rem)/3)] gap-x-4";
-
-      bestPosition = 0;
-
-      requestAnimationFrame(() => {
-        moveBestSlider(0, false);
-      });
-    } catch (error) {
-      console.error("خطا در دریافت پرفروش‌ترین‌ها:", error);
-
-      bestProductsContainer.innerHTML = `
-        <p class="py-8 text-center text-red-500">
-          دریافت محصولات ناموفق بود.
-        </p>
-      `;
+      if (selectedProducts.length === 15) {
+        break;
+      }
     }
+
+    if (selectedProducts.length === 0) {
+      throw new Error("هیچ محصولی دریافت نشد.");
+    }
+
+    // نمایش محصولات
+    bestProductsContainer.innerHTML = "";
+
+    selectedProducts.forEach((product, index) => {
+      const title =
+        product.title_fa ||
+        product.title ||
+        "محصول دیجی‌کالا";
+
+      const imageUrl =
+        product.images?.main?.webp_url?.[0] ||
+        product.images?.main?.url?.[0] ||
+        product.image ||
+        "";
+
+      const card = document.createElement("article");
+
+      card.className =
+        "flex min-w-0 items-center gap-3 border-b border-gray-100 p-3";
+
+      const number = document.createElement("span");
+      number.className =
+        "shrink-0 text-2xl font-bold text-sky-500";
+      number.textContent = String(index + 1);
+
+      const image = document.createElement("img");
+      image.className = "h-20 w-20 shrink-0 object-contain";
+      image.src = Array.isArray(imageUrl) ? imageUrl[0] : imageUrl;
+      image.alt = title;
+      image.draggable = false;
+      image.loading = "lazy";
+      image.style.pointerEvents = "none";
+
+      const name = document.createElement("p");
+      name.className =
+        "line-clamp-2 text-sm leading-6 text-gray-700";
+      name.textContent = title;
+
+      card.append(number, image, name);
+      bestProductsContainer.appendChild(card);
+    });
+
+    // حفظ چیدمان سه ردیفی اسلایدر
+    bestProductsContainer.className =
+      "grid grid-flow-col grid-rows-3 auto-cols-[calc((100%-2rem)/3)] gap-x-4";
+
+    bestPosition = 0;
+
+    requestAnimationFrame(() => {
+      moveBestSlider(0, false);
+    });
+
+  } catch (error) {
+    console.error("خطا در دریافت پرفروش‌ترین‌ها:", error);
+
+    bestProductsContainer.innerHTML = `
+      <p class="py-8 text-center text-red-500">
+        دریافت محصولات ناموفق بود.
+      </p>
+    `;
   }
+}
 
   loadBestProducts();
 
