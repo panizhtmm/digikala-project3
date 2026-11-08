@@ -7284,7 +7284,7 @@ function setupAmazingOffersSlider() {
   dealViewport.classList.add("cursor-grab");
   dealTrack.style.willChange = "transform";
 
-  setPosition(0, false);
+ setPosition(getMaxTranslate(), false);
 }
 
 // =========================================
