@@ -9,7 +9,7 @@ document.querySelector("#app").innerHTML = `
 
     <div class="h-[72px] px-6 flex items-center gap-6">
 
-      <!-- لوگو -->
+<!-- لوگو -->
 <div class="shrink-0">
   <img
     src="/digikala-project3/digikala-logo.svg"
